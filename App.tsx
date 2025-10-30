@@ -87,29 +87,10 @@ Please be very specific and detailed in your analysis.`
       setIsAnalyzing(false);
 
       // Step 2: Generate image with analysis + user's custom prompt
-      const finalPrompt = `Create a 3D-style cartoon character that EXACTLY matches this pet analysis:
-
-${analysisText}
-
-CRITICAL REQUIREMENTS:
-- The breed, coloring, and markings MUST match the analysis exactly
-- The pose and body position MUST be the same as described
-- The fur texture and condition (wet/dry/fluffy) MUST be accurate
-- Any distinctive features or accessories MUST be included
-- Facial expression MUST match the analysis
-
-${prompt ? `\nADDITIONAL USER INSTRUCTIONS:\n${prompt}\n` : ''}
-
-Style requirements:
-- Cute, stylized, Pixar-like 3D cartoon style
-- Large round expressive eyes
-- Soft shading and smooth, glossy texture
-- Slightly exaggerated proportions for cuteness (larger head, shorter limbs)
-- Soft studio lighting with subtle reflections on eyes and nose
-- Transparent or white background suitable for sticker use
-- Professional toy/mascot quality rendering
-
-The character should look like a high-quality toy design while PERFECTLY preserving ALL distinctive features from the real pet.`;
+      // Only use analysis result + user's custom instructions, no preset styles
+      const finalPrompt = prompt
+        ? `Based on this pet analysis:\n\n${analysisText}\n\nUser instructions:\n${prompt}`
+        : `Generate an image based on this pet analysis:\n\n${analysisText}`;
 
       // Configure response modalities based on model
       // gemini-2.5-flash-image supports IMAGE only

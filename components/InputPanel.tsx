@@ -84,12 +84,12 @@ const InputPanel: React.FC<InputPanelProps> = ({
           id="prompt"
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
-          placeholder="e.g., wearing a Santa hat, with rainbow background, extra fluffy style, watercolor effect..."
+          placeholder="e.g., make it 3D cartoon style, wearing a Santa hat, with rainbow background, watercolor painting style..."
           className="w-full h-32 bg-gray-900/50 border border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-shadow duration-200 resize-none text-sm"
           rows={4}
         />
         <p className="text-xs text-gray-500">
-          Add any creative touches! The AI will first analyze the pet, then apply your instructions.
+          Describe how you want the image to look. The AI will analyze the pet first, then apply your instructions.
         </p>
       </div>
 

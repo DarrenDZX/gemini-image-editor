@@ -1,25 +1,30 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Icon from './Icon';
 
 interface OutputPanelProps {
   generatedImage: string | null;
+  generatedImageOriginal: string | null;
   isLoading: boolean;
   error: string | null;
 }
 
-const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, isLoading, error }) => {
+const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, generatedImageOriginal, isLoading, error }) => {
+  const [showOriginal, setShowOriginal] = useState(false);
   const handleDownload = () => {
-    if (!generatedImage) return;
+    const imageToDownload = showOriginal && generatedImageOriginal ? generatedImageOriginal : generatedImage;
+    if (!imageToDownload) return;
 
     // Create a temporary link element
     const link = document.createElement('a');
-    link.href = generatedImage;
+    link.href = imageToDownload;
     link.download = `pet-generated-${Date.now()}.png`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
+  const displayImage = showOriginal && generatedImageOriginal ? generatedImageOriginal : generatedImage;
 
   return (
     <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-700 flex flex-col gap-4 h-full sticky top-28">
@@ -40,7 +45,7 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, isLoading, er
         )}
         {!isLoading && !error && generatedImage && (
           <img
-            src={generatedImage}
+            src={displayImage}
             alt="Generated"
             className="w-full h-full object-contain"
           />
@@ -53,6 +58,15 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, isLoading, er
           </div>
         )}
       </div>
+
+      {!isLoading && !error && generatedImage && generatedImageOriginal && generatedImage !== generatedImageOriginal && (
+        <button
+          onClick={() => setShowOriginal(!showOriginal)}
+          className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors duration-200"
+        >
+          {showOriginal ? '👁️ Show With Background Removed' : '👁️ Show Original (Before BG Removal)'}
+        </button>
+      )}
 
       {!isLoading && !error && generatedImage && (
         <button

@@ -16,6 +16,7 @@ const App: React.FC = () => {
   });
   const [prompt, setPrompt] = useState<string>('');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [generatedImageOriginal, setGeneratedImageOriginal] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [removeBackgroundEnabled, setRemoveBackgroundEnabled] = useState<boolean>(true);
@@ -31,6 +32,7 @@ const App: React.FC = () => {
         mimeType: file.type,
       });
       setGeneratedImage(null);
+      setGeneratedImageOriginal(null);
       setAnalysisResult(null);
       setPrompt(''); // Clear prompt on new image
     };
@@ -51,6 +53,7 @@ const App: React.FC = () => {
     setError(null);
     setAnalysisResult(null);
     setGeneratedImage(null);
+    setGeneratedImageOriginal(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
@@ -136,15 +139,30 @@ The character should look like a high-quality toy design while PERFECTLY preserv
 
       if (imagePartResponse && imagePartResponse.inlineData) {
         const newImageData = imagePartResponse.inlineData;
-        let finalImageUrl = `data:${newImageData.mimeType};base64,${newImageData.data}`;
+        const originalImageUrl = `data:${newImageData.mimeType};base64,${newImageData.data}`;
+
+        console.log('Image generated successfully:', {
+          model: imageModel,
+          mimeType: newImageData.mimeType,
+          dataLength: newImageData.data?.length || 0
+        });
+
+        // Save original generated image
+        setGeneratedImageOriginal(originalImageUrl);
+        let finalImageUrl = originalImageUrl;
 
         // Apply background removal if enabled
         if (removeBackgroundEnabled) {
           try {
-            finalImageUrl = await removeBackground(finalImageUrl);
+            console.log('Applying background removal...');
+            const removedBgUrl = await removeBackground(originalImageUrl);
+            console.log('Background removal successful');
+            finalImageUrl = removedBgUrl;
           } catch (bgError: unknown) {
             const bgErrorMessage = bgError instanceof Error ? bgError.message : 'Unknown error';
-            console.warn('Background removal failed:', bgErrorMessage);
+            console.error('Background removal failed:', bgErrorMessage);
+            // Keep original image if removal fails
+            setError(`Note: Background removal failed (${bgErrorMessage}), showing original image.`);
           }
         }
 
@@ -182,6 +200,7 @@ The character should look like a high-quality toy design while PERFECTLY preserv
         />
         <OutputPanel
           generatedImage={generatedImage}
+          generatedImageOriginal={generatedImageOriginal}
           isLoading={isLoading}
           error={error}
         />

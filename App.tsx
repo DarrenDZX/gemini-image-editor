@@ -66,17 +66,52 @@ const App: React.FC = () => {
           parts: [
             imagePart,
             {
-              text: `Analyze this pet image in detail. Please provide:
-1. Pet type (dog, cat, etc.)
-2. Specific breed or breed characteristics
-3. Physical features (color, fur type/texture, size, distinctive markings)
-4. Body posture and stance (sitting, standing, lying down, running, etc.)
-5. Facial expression and mood
-6. Fur condition (fluffy, wet, groomed, messy, etc.)
-7. Any distinctive accessories or features
-8. Overall appearance and notable characteristics
+              text: `Analyze this pet image in extreme detail. Write a comprehensive description that will be used to generate a new image of this pet. Include:
 
-Please be very specific and detailed in your analysis.`
+**Breed & Species:**
+- Exact breed name (or closest breed mix if uncertain)
+- Key breed-specific physical characteristics
+- Distinguishing breed features (ear shape, tail type, facial structure, etc.)
+
+**Body Type & Physique:**
+- Overall body condition: thin/lean, athletic/muscular, standard weight, stocky, chubby, overweight, etc.
+- Body proportions: leg length relative to body, neck thickness, chest depth
+- Muscle definition and bone structure visibility
+- Body shape: barrel-chested, slim, compact, elongated, etc.
+- Size indicators: relative height, build compared to breed standard
+
+**Detailed Physical Features:**
+- Fur/coat color: exact primary and secondary colors, color patterns, gradients
+- Fur type: short, long, medium, curly, straight, wiry, silky
+- Fur texture and density: thick, thin, fluffy, sleek, coarse, soft
+- Distinctive markings: spots, stripes, patches, color distribution on face, body, legs, tail
+- Face features: eye color and shape, nose color, ear position and shape, muzzle shape
+- Paws, claws, tail characteristics
+
+**Current Posture & Position:**
+- Exact body position: sitting, standing, lying down, crouching, jumping, running, etc.
+- Head position and angle
+- Leg positions and weight distribution
+- Tail position and curve
+- Overall body language
+
+**Facial Expression & Mood:**
+- Eye expression: alert, relaxed, happy, curious, etc.
+- Mouth position: open, closed, tongue visible, panting
+- Ear position: perked up, relaxed, back
+- Overall facial mood and energy level
+
+**Fur Condition & Grooming:**
+- Grooming level: well-groomed, natural, messy, wet
+- Fur condition: shiny, dull, fluffy, matted, smooth
+- Any visible grooming styles (haircuts, trims)
+
+**Accessories & Special Features:**
+- Collar, tags, bandana, clothing
+- Any toys or objects near the pet
+- Distinctive scars, patches, or unique markings
+
+Write this as a detailed, flowing description optimized for image generation AI. Be extremely specific about colors, textures, proportions, and visual details.`
             },
           ],
         },

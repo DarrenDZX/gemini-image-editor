@@ -8,10 +8,13 @@ interface InputPanelProps {
   onImageUpload: (file: File) => void;
   prompt: string;
   onPromptChange: (value: string) => void;
+  onAnalyze: () => void;
   onGenerate: () => void;
+  isAnalyzing: boolean;
   isLoading: boolean;
   removeBackgroundEnabled: boolean;
   onRemoveBackgroundToggle: (enabled: boolean) => void;
+  analysisResult: string | null;
 }
 
 const InputPanel: React.FC<InputPanelProps> = ({
@@ -19,10 +22,13 @@ const InputPanel: React.FC<InputPanelProps> = ({
   onImageUpload,
   prompt,
   onPromptChange,
+  onAnalyze,
   onGenerate,
+  isAnalyzing,
   isLoading,
   removeBackgroundEnabled,
   onRemoveBackgroundToggle,
+  analysisResult,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -67,6 +73,31 @@ const InputPanel: React.FC<InputPanelProps> = ({
         <Icon name="upload" className="w-5 h-5 mr-2" />
         Upload New Image
       </button>
+
+      <button
+        onClick={onAnalyze}
+        disabled={isAnalyzing || !originalImage}
+        className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors duration-200"
+      >
+        {isAnalyzing ? (
+          <>
+            <Icon name="loader" className="w-5 h-5 mr-2 animate-spin" />
+            Analyzing Pet...
+          </>
+        ) : (
+          <>
+            <Icon name="sparkles" className="w-5 h-5 mr-2" />
+            Analyze Pet
+          </>
+        )}
+      </button>
+
+      {analysisResult && (
+        <div className="bg-gray-900/50 border border-gray-600 rounded-lg p-4">
+          <h3 className="font-semibold text-gray-300 mb-2">Analysis Result:</h3>
+          <p className="text-sm text-gray-400 whitespace-pre-wrap">{analysisResult}</p>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         <label htmlFor="prompt" className="font-semibold text-gray-300">

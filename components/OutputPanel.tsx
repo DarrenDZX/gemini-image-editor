@@ -9,6 +9,18 @@ interface OutputPanelProps {
 }
 
 const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, isLoading, error }) => {
+  const handleDownload = () => {
+    if (!generatedImage) return;
+
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = generatedImage;
+    link.download = `pet-generated-${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-700 flex flex-col gap-4 h-full sticky top-28">
        <h2 className="text-xl font-bold text-center text-gray-300">Generated Result</h2>
@@ -41,6 +53,16 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ generatedImage, isLoading, er
           </div>
         )}
       </div>
+
+      {!isLoading && !error && generatedImage && (
+        <button
+          onClick={handleDownload}
+          className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-4 px-4 rounded-lg flex items-center justify-center transition-all duration-200 shadow-lg shadow-green-600/20"
+        >
+          <Icon name="download" className="w-6 h-6 mr-3" />
+          Download Image
+        </button>
+      )}
     </div>
   );
 };

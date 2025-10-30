@@ -14,6 +14,8 @@ interface InputPanelProps {
   removeBackgroundEnabled: boolean;
   onRemoveBackgroundToggle: (enabled: boolean) => void;
   analysisResult: string | null;
+  imageModel: 'gemini-2.5-flash-image' | 'gemini-2.0-flash-exp';
+  onImageModelChange: (model: 'gemini-2.5-flash-image' | 'gemini-2.0-flash-exp') => void;
 }
 
 const InputPanel: React.FC<InputPanelProps> = ({
@@ -27,6 +29,8 @@ const InputPanel: React.FC<InputPanelProps> = ({
   removeBackgroundEnabled,
   onRemoveBackgroundToggle,
   analysisResult,
+  imageModel,
+  onImageModelChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -100,6 +104,44 @@ const InputPanel: React.FC<InputPanelProps> = ({
         <label htmlFor="removeBgCheckbox" className="text-gray-300 cursor-pointer flex-1">
           Remove background automatically
         </label>
+      </div>
+
+      <div className="flex flex-col gap-2 bg-gray-900/50 border border-gray-600 rounded-lg p-3">
+        <label className="font-semibold text-gray-300 text-sm">
+          Image Generation Model
+        </label>
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="radio"
+              name="imageModel"
+              value="gemini-2.0-flash-exp"
+              checked={imageModel === 'gemini-2.0-flash-exp'}
+              onChange={(e) => onImageModelChange(e.target.value as 'gemini-2.0-flash-exp')}
+              className="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
+            />
+            <div className="flex-1">
+              <span className="text-gray-200 font-medium">Gemini 2.0 Flash</span>
+              <span className="ml-2 text-xs bg-green-600 text-white px-2 py-0.5 rounded">FREE</span>
+              <p className="text-xs text-gray-500 mt-0.5">Experimental, good quality, completely free</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="radio"
+              name="imageModel"
+              value="gemini-2.5-flash-image"
+              checked={imageModel === 'gemini-2.5-flash-image'}
+              onChange={(e) => onImageModelChange(e.target.value as 'gemini-2.5-flash-image')}
+              className="w-4 h-4 text-indigo-600 bg-gray-800 border-gray-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer"
+            />
+            <div className="flex-1">
+              <span className="text-gray-200 font-medium">Nano Banana (Gemini 2.5 Flash Image)</span>
+              <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded">PAID</span>
+              <p className="text-xs text-gray-500 mt-0.5">Highest quality, $0.039 per image</p>
+            </div>
+          </label>
+        </div>
       </div>
 
       <button

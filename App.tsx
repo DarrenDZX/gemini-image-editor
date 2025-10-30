@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [removeBackgroundEnabled, setRemoveBackgroundEnabled] = useState<boolean>(true);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
+  const [imageModel, setImageModel] = useState<'gemini-2.5-flash-image' | 'gemini-2.0-flash-exp'>('gemini-2.0-flash-exp');
 
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
@@ -108,7 +109,7 @@ Style requirements:
 The character should look like a high-quality toy design while PERFECTLY preserving ALL distinctive features from the real pet.`;
 
       const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: imageModel,
         contents: {
           parts: [
             imagePart,
@@ -147,7 +148,7 @@ The character should look like a high-quality toy design while PERFECTLY preserv
       setIsLoading(false);
       setIsAnalyzing(false);
     }
-  }, [originalImage, prompt, removeBackgroundEnabled]);
+  }, [originalImage, prompt, removeBackgroundEnabled, imageModel]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col">
@@ -164,6 +165,8 @@ The character should look like a high-quality toy design while PERFECTLY preserv
           removeBackgroundEnabled={removeBackgroundEnabled}
           onRemoveBackgroundToggle={setRemoveBackgroundEnabled}
           analysisResult={analysisResult}
+          imageModel={imageModel}
+          onImageModelChange={setImageModel}
         />
         <OutputPanel
           generatedImage={generatedImage}

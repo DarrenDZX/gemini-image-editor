@@ -10,7 +10,9 @@
       "Bash(git remote add:*)",
       "Bash(git push:*)",
       "Bash(git remote:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "WebSearch",
+      "WebFetch(domain:ai.google.dev)"
     ],
     "deny": [],
     "ask": []

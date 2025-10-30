@@ -108,6 +108,13 @@ Style requirements:
 
 The character should look like a high-quality toy design while PERFECTLY preserving ALL distinctive features from the real pet.`;
 
+      // Configure response modalities based on model
+      // gemini-2.5-flash-image supports IMAGE only
+      // gemini-2.0-flash-exp requires both TEXT and IMAGE
+      const responseModalities = imageModel === 'gemini-2.5-flash-image'
+        ? [Modality.IMAGE]
+        : [Modality.TEXT, Modality.IMAGE];
+
       const imageResponse = await ai.models.generateContent({
         model: imageModel,
         contents: {
@@ -117,13 +124,18 @@ The character should look like a high-quality toy design while PERFECTLY preserv
           ],
         },
         config: {
-          responseModalities: [Modality.IMAGE],
+          responseModalities,
         },
       });
 
-      const firstPart = imageResponse.candidates?.[0]?.content?.parts?.[0];
-      if (firstPart && firstPart.inlineData) {
-        const newImageData = firstPart.inlineData;
+      // Extract image from response
+      // gemini-2.0-flash-exp returns multiple parts (text + image)
+      // gemini-2.5-flash-image returns single part (image only)
+      const parts = imageResponse.candidates?.[0]?.content?.parts || [];
+      const imagePartResponse = parts.find(part => part.inlineData);
+
+      if (imagePartResponse && imagePartResponse.inlineData) {
+        const newImageData = imagePartResponse.inlineData;
         let finalImageUrl = `data:${newImageData.mimeType};base64,${newImageData.data}`;
 
         // Apply background removal if enabled

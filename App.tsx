@@ -39,20 +39,23 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const analyzePet = useCallback(async () => {
+  const generateImage = useCallback(async () => {
     if (!originalImage) {
       setError('Please upload an image first.');
       return;
     }
 
+    setIsLoading(true);
     setIsAnalyzing(true);
     setError(null);
     setAnalysisResult(null);
+    setGeneratedImage(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
 
+      // Step 1: Automatically analyze the pet first
       const analysisResponse = await ai.models.generateContent({
         model: 'gemini-2.0-flash-exp',
         contents: {
@@ -77,38 +80,12 @@ Please be very specific and detailed in your analysis.`
 
       const analysisText = analysisResponse.text || 'Unable to analyze the image.';
       setAnalysisResult(analysisText);
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      setError(`Analysis failed: ${errorMessage}`);
-      console.error(e);
-    } finally {
       setIsAnalyzing(false);
-    }
-  }, [originalImage]);
 
-  const generateImage = useCallback(async () => {
-    if (!originalImage) {
-      setError('Please upload an image first.');
-      return;
-    }
-
-    if (!analysisResult) {
-      setError('Please analyze the pet first before generating.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setGeneratedImage(null);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-      const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
-
-      // Build the generation prompt with analysis + user's custom prompt
+      // Step 2: Generate image with analysis + user's custom prompt
       const finalPrompt = `Create a 3D-style cartoon character that EXACTLY matches this pet analysis:
 
-${analysisResult}
+${analysisText}
 
 CRITICAL REQUIREMENTS:
 - The breed, coloring, and markings MUST match the analysis exactly
@@ -168,8 +145,9 @@ The character should look like a high-quality toy design while PERFECTLY preserv
       console.error(e);
     } finally {
       setIsLoading(false);
+      setIsAnalyzing(false);
     }
-  }, [originalImage, analysisResult, prompt, removeBackgroundEnabled]);
+  }, [originalImage, prompt, removeBackgroundEnabled]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col">
@@ -180,7 +158,6 @@ The character should look like a high-quality toy design while PERFECTLY preserv
           onImageUpload={handleImageUpload}
           prompt={prompt}
           onPromptChange={setPrompt}
-          onAnalyze={analyzePet}
           onGenerate={generateImage}
           isAnalyzing={isAnalyzing}
           isLoading={isLoading}

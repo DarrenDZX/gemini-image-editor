@@ -38,21 +38,24 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const analyzePet = useCallback(async () => {
+  const analyzeAndGenerate = useCallback(async () => {
     if (!originalImage) {
       setError('Please upload an image first.');
       return;
     }
 
+    setIsLoading(true);
     setIsAnalyzing(true);
     setError(null);
     setAnalysisResult(null);
+    setGeneratedImage(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
 
-      const response = await ai.models.generateContent({
+      // Step 1: Analyze the pet
+      const analysisResponse = await ai.models.generateContent({
         model: 'gemini-2.0-flash-exp',
         contents: {
           parts: [
@@ -60,68 +63,55 @@ const App: React.FC = () => {
             {
               text: `Analyze this pet image in detail. Please provide:
 1. Pet type (dog, cat, etc.)
-2. Breed or breed characteristics
-3. Physical features (color, fur type, size, distinctive markings)
-4. Body posture and stance (sitting, standing, lying down, etc.)
+2. Specific breed or breed characteristics
+3. Physical features (color, fur type/texture, size, distinctive markings)
+4. Body posture and stance (sitting, standing, lying down, running, etc.)
 5. Facial expression and mood
-6. Overall appearance and notable features
+6. Fur condition (fluffy, wet, groomed, messy, etc.)
+7. Any distinctive accessories or features
+8. Overall appearance and notable characteristics
 
-Please be specific and detailed in your analysis.`
+Please be very specific and detailed in your analysis, as this will be used to generate an accurate cartoon version.`
             },
           ],
         },
       });
 
-      const analysisText = response.text || 'Unable to analyze the image.';
+      const analysisText = analysisResponse.text || 'Unable to analyze the image.';
       setAnalysisResult(analysisText);
+      setIsAnalyzing(false);
 
-      // Auto-generate prompt based on analysis
-      const generationPrompt = `Create a 3D-style cartoon character based on this pet analysis:
+      // Step 2: Generate image based on analysis
+      const generationPrompt = `Create a 3D-style cartoon character that EXACTLY matches this pet analysis:
 
 ${analysisText}
+
+CRITICAL REQUIREMENTS:
+- The breed, coloring, and markings MUST match the analysis exactly
+- The pose and body position MUST be the same as described
+- The fur texture and condition (wet/dry/fluffy) MUST be accurate
+- Any distinctive features or accessories MUST be included
+- Facial expression MUST match the analysis
 
 Style requirements:
 - Cute, stylized, Pixar-like 3D cartoon style
 - Large round expressive eyes
-- Soft shading and smooth, glossy fur/texture
+- Soft shading and smooth, glossy texture
 - Slightly exaggerated proportions for cuteness (larger head, shorter limbs)
-- Soft studio lighting with subtle reflections
-- Maintain the same pose and characteristics described above
-- Transparent or white background
-- Toy-like, mascot-quality texture
+- Soft studio lighting with subtle reflections on eyes and nose
+- Transparent or white background suitable for sticker use
+- Professional toy/mascot quality rendering
 
-The character should look like a professional mascot or toy design while keeping all the distinctive features from the analysis.`;
+The character should look like a high-quality toy design while PERFECTLY preserving ALL distinctive features from the real pet.`;
 
       setPrompt(generationPrompt);
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-      setError(`Analysis failed: ${errorMessage}`);
-      console.error(e);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  }, [originalImage]);
 
-  const generateImage = useCallback(async () => {
-    if (!originalImage || !prompt) {
-      setError('Please provide an image and a prompt.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setGeneratedImage(null);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-      const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
-
-      const response = await ai.models.generateContent({
+      const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: [
             imagePart,
-            { text: prompt },
+            { text: generationPrompt },
           ],
         },
         config: {
@@ -129,7 +119,7 @@ The character should look like a professional mascot or toy design while keeping
         },
       });
 
-      const firstPart = response.candidates?.[0]?.content?.parts?.[0];
+      const firstPart = imageResponse.candidates?.[0]?.content?.parts?.[0];
       if (firstPart && firstPart.inlineData) {
         const newImageData = firstPart.inlineData;
         let finalImageUrl = `data:${newImageData.mimeType};base64,${newImageData.data}`;
@@ -141,7 +131,7 @@ The character should look like a professional mascot or toy design while keeping
           } catch (bgError: unknown) {
             const bgErrorMessage = bgError instanceof Error ? bgError.message : 'Unknown error';
             console.warn('Background removal failed:', bgErrorMessage);
-            setError(`Image generated but background removal failed: ${bgErrorMessage}`);
+            // Still show the image even if background removal fails
           }
         }
 
@@ -155,8 +145,9 @@ The character should look like a professional mascot or toy design while keeping
       console.error(e);
     } finally {
       setIsLoading(false);
+      setIsAnalyzing(false);
     }
-  }, [originalImage, prompt, removeBackgroundEnabled]);
+  }, [originalImage, removeBackgroundEnabled]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col">
@@ -165,10 +156,7 @@ The character should look like a professional mascot or toy design while keeping
         <InputPanel
           originalImage={originalImage}
           onImageUpload={handleImageUpload}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-          onAnalyze={analyzePet}
-          onGenerate={generateImage}
+          onAnalyzeAndGenerate={analyzeAndGenerate}
           isAnalyzing={isAnalyzing}
           isLoading={isLoading}
           removeBackgroundEnabled={removeBackgroundEnabled}

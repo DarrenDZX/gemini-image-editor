@@ -6,10 +6,7 @@ import type { ImageFile } from '../types';
 interface InputPanelProps {
   originalImage: ImageFile | null;
   onImageUpload: (file: File) => void;
-  prompt: string;
-  onPromptChange: (value: string) => void;
-  onAnalyze: () => void;
-  onGenerate: () => void;
+  onAnalyzeAndGenerate: () => void;
   isAnalyzing: boolean;
   isLoading: boolean;
   removeBackgroundEnabled: boolean;
@@ -20,10 +17,7 @@ interface InputPanelProps {
 const InputPanel: React.FC<InputPanelProps> = ({
   originalImage,
   onImageUpload,
-  prompt,
-  onPromptChange,
-  onAnalyze,
-  onGenerate,
+  onAnalyzeAndGenerate,
   isAnalyzing,
   isLoading,
   removeBackgroundEnabled,
@@ -71,47 +65,8 @@ const InputPanel: React.FC<InputPanelProps> = ({
         className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors duration-200"
       >
         <Icon name="upload" className="w-5 h-5 mr-2" />
-        Upload New Image
+        Upload Pet Image
       </button>
-
-      <button
-        onClick={onAnalyze}
-        disabled={isAnalyzing || !originalImage}
-        className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg flex items-center justify-center transition-colors duration-200"
-      >
-        {isAnalyzing ? (
-          <>
-            <Icon name="loader" className="w-5 h-5 mr-2 animate-spin" />
-            Analyzing Pet...
-          </>
-        ) : (
-          <>
-            <Icon name="sparkles" className="w-5 h-5 mr-2" />
-            Analyze Pet
-          </>
-        )}
-      </button>
-
-      {analysisResult && (
-        <div className="bg-gray-900/50 border border-gray-600 rounded-lg p-4">
-          <h3 className="font-semibold text-gray-300 mb-2">Analysis Result:</h3>
-          <p className="text-sm text-gray-400 whitespace-pre-wrap">{analysisResult}</p>
-        </div>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="prompt" className="font-semibold text-gray-300">
-          Editing Prompt
-        </label>
-        <textarea
-          id="prompt"
-          value={prompt}
-          onChange={(e) => onPromptChange(e.target.value)}
-          placeholder="e.g., Make this a watercolor painting"
-          className="w-full h-40 bg-gray-900/50 border border-gray-600 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow duration-200 resize-none"
-          rows={5}
-        />
-      </div>
 
       <div className="flex items-center gap-3 bg-gray-900/50 border border-gray-600 rounded-lg p-3">
         <input
@@ -122,27 +77,42 @@ const InputPanel: React.FC<InputPanelProps> = ({
           className="w-5 h-5 text-indigo-600 bg-gray-800 border-gray-600 rounded focus:ring-indigo-500 focus:ring-2 cursor-pointer"
         />
         <label htmlFor="removeBgCheckbox" className="text-gray-300 cursor-pointer flex-1">
-          Remove background automatically (using remove.bg)
+          Remove background automatically
         </label>
       </div>
 
       <button
-        onClick={onGenerate}
-        disabled={isLoading || !originalImage}
-        className="w-full mt-auto bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg flex items-center justify-center transition-all duration-200 text-lg shadow-lg shadow-indigo-600/20"
+        onClick={onAnalyzeAndGenerate}
+        disabled={isLoading || isAnalyzing || !originalImage}
+        className="w-full mt-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-purple-800 disabled:to-indigo-800 disabled:cursor-not-allowed text-white font-bold py-4 px-4 rounded-lg flex items-center justify-center transition-all duration-200 text-lg shadow-lg shadow-purple-600/20"
       >
-        {isLoading ? (
+        {isAnalyzing ? (
           <>
             <Icon name="loader" className="w-6 h-6 mr-3 animate-spin" />
-            Generating...
+            Analyzing Pet...
+          </>
+        ) : isLoading ? (
+          <>
+            <Icon name="loader" className="w-6 h-6 mr-3 animate-spin" />
+            Generating Image...
           </>
         ) : (
           <>
             <Icon name="sparkles" className="w-6 h-6 mr-3" />
-            Generate
+            Analyze & Generate
           </>
         )}
       </button>
+
+      {analysisResult && (
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-purple-500/30 rounded-lg p-4 shadow-lg">
+          <h3 className="font-bold text-purple-400 mb-2 flex items-center">
+            <Icon name="sparkles" className="w-5 h-5 mr-2" />
+            Pet Analysis
+          </h3>
+          <p className="text-sm text-gray-300 whitespace-pre-wrap leading-relaxed">{analysisResult}</p>
+        </div>
+      )}
     </div>
   );
 };

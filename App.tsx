@@ -14,7 +14,7 @@ const App: React.FC = () => {
     dataUrl: DEFAULT_IMAGE_DATA_URL,
     mimeType: 'image/jpeg',
   });
-  const [prompt, setPrompt] = useState<string>(DEFAULT_PROMPT);
+  const [prompt, setPrompt] = useState<string>('');
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,8 +29,9 @@ const App: React.FC = () => {
         dataUrl: reader.result as string,
         mimeType: file.type,
       });
-      setGeneratedImage(null); // Clear previous result on new image upload
-      setAnalysisResult(null); // Clear previous analysis
+      setGeneratedImage(null);
+      setAnalysisResult(null);
+      setPrompt(''); // Clear prompt on new image
     };
     reader.onerror = () => {
       setError('Failed to read the image file.');
@@ -38,23 +39,20 @@ const App: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const analyzeAndGenerate = useCallback(async () => {
+  const analyzePet = useCallback(async () => {
     if (!originalImage) {
       setError('Please upload an image first.');
       return;
     }
 
-    setIsLoading(true);
     setIsAnalyzing(true);
     setError(null);
     setAnalysisResult(null);
-    setGeneratedImage(null);
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
 
-      // Step 1: Analyze the pet
       const analysisResponse = await ai.models.generateContent({
         model: 'gemini-2.0-flash-exp',
         contents: {
@@ -71,7 +69,7 @@ const App: React.FC = () => {
 7. Any distinctive accessories or features
 8. Overall appearance and notable characteristics
 
-Please be very specific and detailed in your analysis, as this will be used to generate an accurate cartoon version.`
+Please be very specific and detailed in your analysis.`
             },
           ],
         },
@@ -79,12 +77,38 @@ Please be very specific and detailed in your analysis, as this will be used to g
 
       const analysisText = analysisResponse.text || 'Unable to analyze the image.';
       setAnalysisResult(analysisText);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+      setError(`Analysis failed: ${errorMessage}`);
+      console.error(e);
+    } finally {
       setIsAnalyzing(false);
+    }
+  }, [originalImage]);
 
-      // Step 2: Generate image based on analysis
-      const generationPrompt = `Create a 3D-style cartoon character that EXACTLY matches this pet analysis:
+  const generateImage = useCallback(async () => {
+    if (!originalImage) {
+      setError('Please upload an image first.');
+      return;
+    }
 
-${analysisText}
+    if (!analysisResult) {
+      setError('Please analyze the pet first before generating.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setGeneratedImage(null);
+
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      const imagePart = await fileToGenerativePart(originalImage.dataUrl, originalImage.mimeType);
+
+      // Build the generation prompt with analysis + user's custom prompt
+      const finalPrompt = `Create a 3D-style cartoon character that EXACTLY matches this pet analysis:
+
+${analysisResult}
 
 CRITICAL REQUIREMENTS:
 - The breed, coloring, and markings MUST match the analysis exactly
@@ -92,6 +116,8 @@ CRITICAL REQUIREMENTS:
 - The fur texture and condition (wet/dry/fluffy) MUST be accurate
 - Any distinctive features or accessories MUST be included
 - Facial expression MUST match the analysis
+
+${prompt ? `\nADDITIONAL USER INSTRUCTIONS:\n${prompt}\n` : ''}
 
 Style requirements:
 - Cute, stylized, Pixar-like 3D cartoon style
@@ -104,14 +130,12 @@ Style requirements:
 
 The character should look like a high-quality toy design while PERFECTLY preserving ALL distinctive features from the real pet.`;
 
-      setPrompt(generationPrompt);
-
       const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: [
             imagePart,
-            { text: generationPrompt },
+            { text: finalPrompt },
           ],
         },
         config: {
@@ -131,7 +155,6 @@ The character should look like a high-quality toy design while PERFECTLY preserv
           } catch (bgError: unknown) {
             const bgErrorMessage = bgError instanceof Error ? bgError.message : 'Unknown error';
             console.warn('Background removal failed:', bgErrorMessage);
-            // Still show the image even if background removal fails
           }
         }
 
@@ -145,9 +168,8 @@ The character should look like a high-quality toy design while PERFECTLY preserv
       console.error(e);
     } finally {
       setIsLoading(false);
-      setIsAnalyzing(false);
     }
-  }, [originalImage, removeBackgroundEnabled]);
+  }, [originalImage, analysisResult, prompt, removeBackgroundEnabled]);
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans flex flex-col">
@@ -156,7 +178,10 @@ The character should look like a high-quality toy design while PERFECTLY preserv
         <InputPanel
           originalImage={originalImage}
           onImageUpload={handleImageUpload}
-          onAnalyzeAndGenerate={analyzeAndGenerate}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+          onAnalyze={analyzePet}
+          onGenerate={generateImage}
           isAnalyzing={isAnalyzing}
           isLoading={isLoading}
           removeBackgroundEnabled={removeBackgroundEnabled}

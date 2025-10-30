@@ -1,0 +1,5 @@
+
+{
+  "name": "Gemini Image Editor",
+  "description": "An application for users to use text prompts to edit images using Gemini 2.5 Flash Image. Upload an image, provide a text prompt, and let Gemini generate a new version of your image."
+}
